@@ -9,6 +9,7 @@ import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
 
+
 /**
  * Created by junyuwang on 3/6/16.
  */
@@ -16,10 +17,12 @@ public class WeatherDataParser {
 
     private String forecastJsonStr;
     private int numDays;
+    private String unit_type;
 
-    public WeatherDataParser(String weatherDataJson, int numDays) {
+    public WeatherDataParser(String weatherDataJson, int numDays, String unit_type) {
         this.forecastJsonStr = weatherDataJson;
         this.numDays = numDays;
+        this.unit_type = unit_type;
     }
 
     /* The date/time conversion code is going to be moved outside the asynctask later,
@@ -32,16 +35,19 @@ public class WeatherDataParser {
         return shortenedDateFormat.format(time);
     }
 
-    /**
-     * Prepare the weather high/lows for presentation.
-     */
-    private String formatHighLows(double high, double low) {
-        // For presentation, assume the user doesn't care about tenths of a degree.
+    private String formatHighLows(double high, double low, String unit_type) {
+        if (unit_type.equals("imperial")) {
+            high = (high * 1.8) + 32;
+            low = (low * 1.8) + 32;
+        }else if (!unit_type.equals("metric")) {
+            Log.d("Formatting Units", "Unit type not found: " + unit_type);
+        }
+
         long roundedHigh = Math.round(high);
         long roundedLow = Math.round(low);
 
-        String highLowStr = roundedHigh + "/" + roundedLow;
-        return highLowStr;
+        String highLows = roundedHigh + "/" + roundedLow;
+        return highLows;
     }
 
     /**
@@ -110,7 +116,7 @@ public class WeatherDataParser {
             double high = temperatureObject.getDouble(OWM_MAX);
             double low = temperatureObject.getDouble(OWM_MIN);
 
-            highAndLow = formatHighLows(high, low);
+            highAndLow = formatHighLows(high, low, this.unit_type);
             resultStrs[i] = day + " - " + description + " - " + highAndLow;
         }
 
